@@ -1,0 +1,22 @@
+
+Chapter 5
+- Video1
+Slides on cluster,why? could be better structured
+
+-Exercises
+in ex2 hints: ?means doesnt exist
+
+- Video2: Performance and scaling issues
+Gille appears to be a bit pink, maybe we can filer that
+
+Exercises
+in ex7 error in success_msg: substantionally
+in ex12 hint: first hint includes one too many paranthesis, second hint does not makes sense. I think the word arguent is missing in the second sentence
+in ex15 - Do you remember what Dunn's index measured => I would use present tense, also in the instructions
+		hint is missing
+		success_msg: If you think[it] about, it can make sense
+However, if you'd like to report your clusters to the local newspapers, then complete linkage or k-means are probably the better choice!
+==> why?
+
+
+

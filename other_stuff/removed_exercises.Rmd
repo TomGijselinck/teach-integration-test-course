@@ -1,0 +1,277 @@
+--- type:VideoExercise xp:50
+## Logistic regression
+
+*** =video_link
+```{r,eval=FALSE}
+//player.vimeo.com/video/108225030
+```
+
+*** =skills
+6
+
+--- type:NormalExercise xp:100
+## The Logistic model
+
+In this exercise you're going to train a logistic model on the emails dataset. You should use the `glm()` function to do this. Behind the scenes, R is fitting a generalized linear model into the data. You can use `glm()` in the same way you use `lm()`.
+
+The `family` parameter of `glm()` should be set to `binomial(logit)`, since the response variable will be following a binomial distribution. Take a look at the output variable of your `predict()` function. Do you think these are probabilities? Why/Why not?
+
+The `train` and `test` set are loaded into your workspace. 
+
+*** =instructions
+- Use the `glm()` function to train a logistic model on the training set, `logr`. The formula in the first argument should look as follows: `spam ~ .`. Make sure to use the correct `family`.
+- Use `predict()` and the trained model to predict the values of the test set. Assign this vector to `pred`.
+- Take a look at the resulting vector, what do you think these numbers mean? Use `summary()`.
+
+*** =hint
+- The `glm()` function takes a formula as first argument. Don't forget to set `family` to  `binomial(logit)`.
+- Just use `predict()` with two arguments to predict the values of the the `test` set.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+emails <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_complete.csv'))
+set.seed(1)
+shuffled <- emails[sample(nrow(emails)),]
+train <- shuffled[1:round(0.7*nrow(shuffled)),]
+test <- shuffled[(round(0.7*nrow(shuffled))+1):nrow(shuffled),]
+```
+
+*** =sample_code
+```{r}
+# The train and test set are already loaded into your workspace
+
+# Train a logistic regression model: logr
+
+
+# Predict log-odd values using the model: pred
+
+
+# Inspect these values
+
+```
+
+*** =solution
+```{r}
+# The train and test set are already loaded into your workspace
+
+# Train a logistic regression model: logr
+logr <- glm(spam ~ ., train, family = binomial(logit))
+
+# Predict log-odd values using the model: pred
+pred <- predict(logr, test)
+
+# Inspect these values
+summary(pred)
+```
+
+*** =sct
+```{r}
+test_error()
+test_object("logr",
+            incorrect_msg = "The logistic regression model is incorrect: use <code>glm()</code> with a formula as the first argument: <code>spam ~ .</code>. Make sure to set <code>family</code> to <code>binomial(logit)</code>.")
+test_object("pred", 
+            incorrect_msg = "Make sure to use <code>predict()</code> with two arguments and predict on the <code>test</code> set.")
+test_function("summary", "object",
+              incorrect_msg = "The function <code>summary()</code> should be called on the predictions you made.")
+
+success_msg("Good job! As you might have expected, these values are not the probabilities of the emails being spam. These numbers are the logits (or log-odds, the logarithm of the odds) of these probabilties. We will calculate the probabilities in the next exercise. ")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100
+## Predict the class with the logistic model
+
+In the previous exercise, you calculated the logits of the probabilities that a given email was spam. These numbers are the logarithms of the odds of a mail being spam. As explained in the video, the logit of the probability is the logarithm of the odds. It is a linear combination of the input features:
+
+$$ln\left(\frac{p(\mathbf{x})}{1-p(\mathbf{x})}\right) = \beta_{0} + \mathbf{x} \cdot \boldsymbol{\beta_1}$$.
+
+In this exercise you will learn to evaluate your logistic model using the confusion matrix.
+
+Note that setting the `type` of `predict()` to `"response"` will give you the probabilities instead of the log odds. You could calculate them yourself as well by taking the output of the previous exercise and using the formula,
+
+$$ p(\mathbf{x}) = \frac{e^{\beta_{0}+\mathbf{x} \cdot {\boldsymbol{\beta_{1}}}}}{1+e^{\beta_{0}+\mathbf{x} \cdot {\boldsymbol{\beta_{1}}}}} $$.
+
+The `train` and `test` set are loaded into your workspace. 
+
+*** =instructions
+- Use the `glm()` function to train a logistic model on the training set, `logr`. The formula in the first argument should look as follows: `spam ~ .`. Make sure to use the correct `family`.
+- Use `predict()` and the trained model to predict the values of the test set. Set `type` to `response`. Assign this vector to `prob`.
+- Predict the classes using the given decision rule, `dec` and `sapply()`. You decide an email is spam, if the probability of it being spam is greater than $0.5$. Remember the probabilties are in `prob`. Assign these predictions to `pred`.
+- Use `test$spam` and `pred` in `table()` to calculate the confusion matrix. 
+- Finally calculate the accuracy. Assign to `acc`.
+
+*** =hint
+- The `glm()` function takes a formula as first argument. Don't forget to set `family` to `binomial(logit)`.
+- You can use `sapply()` as follows: `sapply(prob, dec)`.
+- Use the `table()` function for the confusion matrix.
+- Use `sum()` and `diag()` to calculate the accuracy.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+emails <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_complete.csv'))
+set.seed(1)
+shuffled <- emails[sample(nrow(emails)),]
+train <- shuffled[1:round(0.7*nrow(shuffled)),]
+test <- shuffled[(round(0.7*nrow(shuffled))+1):nrow(shuffled),]
+```
+
+*** =sample_code
+```{r}
+# The train and test set are already loaded into your workspace.
+
+# Train a logistic regression model: logr
+
+
+# Predict probability values using the model: prob
+
+
+# The decision function
+dec <- function(x) {
+  if (x > 0.5) {
+    return(1)
+  } else {
+    return(0)
+  }
+}
+
+# Predict the classes: pred
+
+
+# Construct the confusion matrix: conf
+
+
+# Calculate the accuracy: acc
+
+```
+
+*** =solution
+```{r}
+# The train and test set are already loaded into your workspace.
+
+# Train a logistic regression model: logr
+logr <- glm(spam ~ ., train, family = binomial(logit))
+
+# Predict probability values using the model: prob
+prob <- predict(logr, test, type="response")
+
+# The decision function
+dec <- function(x) {
+  if (x > 0.5) {
+    return(1)
+  } else {
+    return(0)
+  }
+}
+
+# Predict the classes: pred
+pred <- sapply(prob, dec)
+
+# Construct the confusion matrix: conf
+conf <- table(test$spam, pred)
+
+# Calculate the accuracy: acc
+acc <- sum(diag(conf))/sum(conf)
+```
+
+*** =sct
+```{r}
+msg0 <- "Don't change the predefined code."
+test_error()
+test_object("logr",
+            incorrect_msg = "The logistic regression model is incorrect: use <code>glm()</code> with a formula as the first argument: <code>spam ~ .</code>. Make sure to set <code>family</code> to <code>binomial(logit)</code>.")
+test_object("prob", 
+            incorrect_msg = "Make sure to use <code>predict()</code> with tree arguments and predict on the <code>test</code> set. Don't forget to set the <code>type</code> argument.")
+test_object("dec", undefined_msg = msg0, incorrect_msg = msg0)
+test_object("pred", 
+            incorrect_msg = "Make sure to use <code>sapply()</code> with two arguments: the probabilities and the decision function.")
+test_object("conf",
+            undefined_msg = "Make sure to use <code>table()</code> to create <code>conf</code>.",
+            incorrect_msg = "The <code>table()</code> function needs <code>test$spam</code> and <code>pred</code>.")
+test_object("acc",
+            incorrect_msg = "Your definition of <code>acc</code> is incorrect. Take another look at the instructions or use the hint.")
+
+success_msg("Great! That's a pretty nice accuracy you got there! This time you used the threshold probability of 0.5 to assign a label to an email. If the probability that an email is spam is bigger than 0.5, it will be classified as spam. In this case we could have set a threshold of 0 on the logits to come to the same solution. However, sometimes you might want the decision threshold to be 20%, for example if you want to decrease the chance on misses (i.e. misclassifying spam as normal). In this case having probabilities instead of logits comes in handy.")
+```
+
+*** =skills
+1,6
+
+
+
+
+
+
+--- type:ChallengeExercise xp:200
+## Build a better spam filter
+
+You've seen that creating a spam filter that works well on a big datataset isn't that easy. The maximum accuracy you achieved so far was about 72%. In this exercise you will use more attributes to create a better model to classify spam.
+
+The `emails` dataset is loaded into your workspace. Use everything you learned in this chapter to build a decision tree model and assess it's performance by calculating the accuracy, precision and recall on the test set. 
+
+*** =challenge_steps
+## Prepare the training and test set
+Shuffle the data with data frame subsetting techniques; use the `indices` vector as row order. Assign this shuffled dataset to `shuffled`. Afterwards split the shuffled dataset in the training set `train` and the test set `test`. You should use a 70/30 split. Using `round(0.7*nrow(shuffled))` can help you, like in the previous exercises.
+
+## Learn a decision tree model and make your predictions
+Use the [`rpart()`](http://www.rdocumentation.org/packages/rpart/functions/rpart) command to train a decision tree model like in the exercises. Assign this model to `tree`. You can use all attributes to train the model (use the formula `spam ~ .`). Afterwards use the tree model to [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) the labels of the test set. Assign the predictions to `pred`.
+
+## Build the confusion matrix
+Use the [`table()`](http://www.rdocumentation.org/packages/base/functions/table) function to calculate the confusion matrix of the model on the test set. Call it `conf`. Use the confusion matrix to calculate the accuracy, precision and recall on the test set.
+
+*** =challenge_goal
+## Calculate accuracy, precision and recall of the model
+Using the `indices` vector, create a reshuffled version of your dataset and store it in `shuffled`. Use this dataset to build a training and test set with a 70/30 split (`train` and `test`). Learn a decision tree on the training set with [`rpart()`](http://www.rdocumentation.org/packages/rpart/functions/rpart) and use it to make predictions on the test set: `pred`. Build a confusion matrix - `conf` - of the prediction results and derive accuracy, precision and recall from them: `acc`, `prec` and `rec`.
+
+*** =pre_exercise_code
+```{r}
+emails <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_complete.csv'))
+library(rpart)
+set.seed(1)
+indices <- sample(nrow(emails))
+```
+
+*** =solution
+```{r}
+shuffled <- emails[indices,]
+train <- shuffled[1:round(0.7*nrow(shuffled)),]
+test <- shuffled[(round(0.7*nrow(shuffled))+1):nrow(shuffled),]
+
+tree <- rpart(spam ~ ., train, method = "class")
+pred <- predict(tree, test, type = "class")
+
+conf <- table(test$spam, pred)
+
+acc <- sum(diag(conf))/sum(conf)
+prec <- conf[1,1]/sum(conf[,1])
+rec <- conf[1,1]/sum(conf[1,])
+```
+
+*** =sct
+```{r}
+test_instruction(1, {
+  test_error()
+  test_object("shuffled")
+  test_object("train")
+  test_object("test")
+})
+test_instruction(2, {
+  test_error()
+  test_object("pred")
+})
+test_instruction(3, {
+  test_error()
+  test_object("conf")
+})
+test_instruction(4, {
+  test_error()
+  test_object("acc")
+  test_object("prec")
+  test_object("rec")
+})
+success_msg("You successfully completed this challenge, awesome! You made a pretty neat model! However, for commercial use spam filters will usually need an accuracy of 99% or higher. You will tweak your classification skills in the next chapter to make even better models.")
+```
+
+*** =skills
+1,6

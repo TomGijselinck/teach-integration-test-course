@@ -1,0 +1,1 @@
+apt-get update && apt-get install -y libgtk2.0-dev

@@ -1,0 +1,46 @@
+--- type:NormalExercise
+## 
+
+*** =instructions
+
+*** =hint
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+# no pec
+```
+
+*** =sample_code
+```{r, eval=FALSE}
+```
+
+*** =solution
+```{r, eval=FALSE}
+```
+
+*** =sct
+```{r, eval=FALSE}
+success_msg("OK")
+```
+
+
+--- type:MultipleChoiceExercise
+## 
+
+*** =instructions
+
+*** =hint
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+# no pec
+```
+
+*** =sct
+```{r, eval=FALSE}
+msg1 <- ""
+msg2 <- ""
+msg3 <- ""
+msg4 <- ""
+test_mc(0, feedback_msgs = c(msg1, msg2, msg3, msg4))
+```

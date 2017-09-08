@@ -1,0 +1,34 @@
+title: Introduction to Machine Learning
+type: PaidCourse
+difficulty_level: 2
+instructors:
+  - test_student@datacamp.com
+collaborators:
+  - developer@datacamp.com
+time_needed: 6 hours
+description: "This online machine learning course is perfect for those who have a solid basis in R and statistics,
+  but are complete beginners with machine learning.
+  After a broad overview of the discipline's most common techniques and applications,
+  you'll gain more insight into the assessment and training of different machine learning models.
+  The rest of the course is dedicated to a first reconnaissance with three of the most
+  basic machine learning tasks: classification, regression and clustering."
+from: "r-base-prod:28"
+prerequisites:
+  - 58 # Introduction to R
+  - 672 # Intermediate R   
+  - 1799 # Correlation and Regression
+datasets:
+  cars.csv: Cars  
+  emails.RData: Emails  
+  titanic.csv: Titanic  
+  air.csv: Air  
+  seeds.csv: Seeds  
+  income.RData: Income  
+  kangoroos.csv: Kangoroos  
+  world_bank_train.csv: World Bank data  
+  shop_data: Shop sales data  
+  choco_data: Chocolate bars  
+  school_result.csv: School results  
+  run_record.csv: Olympic run records  
+  crime_data.csv: Crime data  
+  

@@ -1,0 +1,1254 @@
+---
+title_meta  : Chapter 2
+title       : Performance measures
+description : You'll learn how to assess the performance of both supervised and unsupervised learning algorithms. Next, you'll learn why and how you should split your data in a training set and a test set. Finally, the concepts of bias and variance are explained.
+attachments : 
+  slides_link: https://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/slides/ch2_slides_new.pdf
+  
+--- type:VideoExercise xp:50 key:8da6f042a7
+## Measuring model performance or error
+
+*** =video_link
+```{r,eval=FALSE}
+//player.vimeo.com/video/163569064
+```
+
+*** =video_stream
+```{r,eval=FALSE}
+https://player.vimeo.com/external/163569064.hd.mp4?s=0d1a13521bb519e90088ceb7b7baf25f861f41bb&profile_id=119
+```
+
+*** =video_hls
+//videos.datacamp.com/transcoded/682_intro_to_ml/v2/hls-ch2_1.master.m3u8
+
+
+*** =skills
+6
+
+--- type:NormalExercise xp:100 key:8fa75e5d1c
+## The Confusion Matrix
+
+Have you ever wondered if you would have survived the Titanic disaster in 1912? Our friends from [Kaggle](https://www.kaggle.com/c/titanic/data) have some historical data on this event. The `titanic` dataset is already available in your workspace.
+
+In this exercise, a decision tree is learned on this dataset. The tree aims to predict whether a person would have survived the accident based on the variables `Age`, `Sex` and `Pclass` (travel class). The decision the tree makes can be deemed correct or incorrect if we know what the person's true outcome was. That is, if it's a supervised learning problem.
+
+Since the true fate of the passengers, `Survived`, is also provided in `titanic`, you can compare it to the prediction made by the `tree`. As you've seen in the video, the results can be summarized in a confusion matrix. In R, you can use the [`table()`](http://www.rdocumentation.org/packages/base/functions/table) function for this.
+
+In this exercise, you will only focus on assessing the performance of the decision tree. In chapter 3, you will learn how to actually build a decision tree yourself.
+
+**Note:** As in the previous chapter, there are functions that have a random aspect. The [`set.seed()`](http://www.rdocumentation.org/packages/base/functions/Random) function is used to enforce reproducibility. Don't worry about it, just don't remove it!
+
+*** =instructions
+- Have a look at the structure of `titanic`. Can you infer the number of observations and variables?
+- Inspect the code that build the decision tree, `tree`. Don't worry if you do not fully understand it yet.
+- Use `tree` to [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) who survived in the titanic dataset. Use `tree` as the first argument and `titanic` as the second argument. Make sure to set the `type` parameter to `"class"`. Assign the result to `pred`.
+- Build the confusion matrix with the [`table()`](http://www.rdocumentation.org/packages/base/functions/table) function. This function builds a contingency table. The first argument corresponds to the rows in the matrix and should be the `Survived` column of `titanic`: the true labels from the data. The second argument, corresponding to the columns, should be `pred`: the tree's predicted labels.
+
+*** =hint
+- If you're stuck at the prediction step, remember that the first argument of [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) must be the model that you want to use: `tree`. You can consult the documentation by clicking on [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict).
+- The [`table()`](http://www.rdocumentation.org/packages/base/functions/table) method takes two vectors: one with the actual, true values and one with the predicted values.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+titanic <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/titanic.csv'))
+titanic$Survived <- factor(titanic$Survived, levels=c("1","0"))
+library(rpart)
+```
+
+*** =sample_code
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Have a look at the structure of titanic
+str(titanic)
+
+# A decision tree classification model is built on the data
+tree <- rpart(Survived ~ ., data = titanic, method = "class")
+
+# Use the predict() method to make predictions, assign to pred
+
+
+# Use the table() method to make the confusion matrix
+
+```
+
+*** =solution
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Have a look at the structure of titanic
+str(titanic)
+
+# A decision tree classification model is built on the data
+tree <- rpart(Survived ~ ., data = titanic, method = "class")
+
+# Use the predict() method to make predictions, assign to pred
+pred <- predict(tree, titanic, type = "class")
+
+# Use the table() method to make the confusion matrix
+table(titanic$Survived, pred)
+```
+
+*** =sct
+```{r}
+msg0 <- "Do not mess with the random seed."
+test_function("set.seed","seed", incorrect_msg = msg0, not_called_msg = msg0)
+ 
+test_output_contains("str(titanic)", 
+                     incorrect_msg = "Did you call <code>str()</code> with argument <code>titanic</code>?")
+
+msg1 <- "Do not change or remove the definition of the tree model <code>tree</code>."
+test_object("tree", incorrect_msg = msg1, undefined_msg = msg1)
+
+test_correct ({
+  test_object("pred", incorrect_msg = "Your definition of <code>pred</code> is incorrect. You can use the <code>predict()</code> function with <code>tree</code> and <code>titanic</code> as the first two inputs. Don't forget to add <code>type = \"class\"</code>.")
+}, {
+  test_function("predict", "object", incorrect_msg = "When calling <code>predict</code>, use <code>tree</code> as first argument and <code>titanic</code> as second. Don't forget to add <code>type = \"class\"</code>.")
+})
+
+test_output_contains("table(titanic$Survived, pred)", incorrect_msg = "Use the <code>table()</code> function with two arguments to output the confusion matrix.")
+
+test_error()
+success_msg("Great! Pretty neat, huh? So to summarize, 212 out of all 265 survivors were correctly predicted to have survived. On the other hand, 371 out of the 449 deceased were correctly predicted to have perished. In the next exercise, you'll put these numbers in more comprehensive ratios!")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:698d69349e
+## Deriving ratios from the Confusion Matrix
+
+The confusion matrix from the last exercise provides you with the raw performance of the decision tree:
+
+1. The survivors correctly predicted to have survived: *true positives (TP)*
+2. The deceased who were wrongly predicted to have survived: *false positives (FP)*
+3. The survivors who were wrongly predicted to have perished: *false negatives (FN)*
+4. The deceased who were correctly predicted to have perished: *true negatives (TN)*
+
+$$
+\begin{matrix}
+           & \mathbf{P} & \mathbf{N}\\\
+\mathbf{p} & \mathrm{TP}& \mathrm{FN}\\\
+\mathbf{n} & \mathrm{FP}& \mathrm{TN}\\\
+\end{matrix}
+$$
+
+The confusion matrix is called `conf`, try this in the console for its specific values:
+
+```
+> conf
+   
+      1   0
+  1 212  78
+  0  53 371
+```
+
+In the video, you saw that these values can be used to estimate comprehensive ratios to asses the performance of a classification algorithm.  An example is the accuracy, which in this case represents the percentage of correctly predicted fates of the passengers.
+
+$$\mathrm{Accuracy} = \frac{\mathrm{TP}+\mathrm{TN}}{\mathrm{TP}+\mathrm{FN}+\mathrm{FP}+\mathrm{TN}}.$$
+
+Apart from accuracy, precision and recall are also key metrics to assess the results of a classification algorithm:
+
+$$\mathrm{Precision} = \frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}}$$
+
+$$\mathrm{Recall} = \frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}$$
+
+The confusion matrix you've calculated in the previous exercise is available in your workspace as `conf`.
+
+*** =instructions
+- Assign the correct values of the confusion matrix to `FP` and `TN`. Fill in the `___`.
+- Calculate the accuracy as `acc` and print it out.
+- Finally, also calculate the precision and the recall, as `prec` and `rec`. Print out both of them.
+
+*** =hint
+Take a good look at the exercise description and the loaded matrix to find correct values for `TP`, `FN`, `FP` and `TN`. To select the element on the first row and second column, for example, you'll want to use `conf[1,2]`.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+titanic <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/titanic.csv'))
+titanic$Survived <- factor(titanic$Survived, levels=c("1","0"))
+library(rpart)
+set.seed(1)
+conf <- table(titanic$Survived, predict(rpart(Survived ~ ., titanic, method = "class"), titanic, type="class"))
+```
+
+*** =sample_code
+```{r}
+# The confusion matrix is available in your workspace as conf
+
+# Assign TP, FN, FP and TN using conf
+TP <- conf[1, 1] # this will be 212
+FN <- conf[1, 2] # this will be 78
+FP <- ___ # fill in
+TN <- ___ # fill in
+
+# Calculate and print the accuracy: acc
+
+
+
+# Calculate and print out the precision: prec
+
+
+
+# Calculate and print out the recall: rec
+
+
+```
+
+*** =solution
+```{r}
+# The confusion matrix is available in your workspace as conf
+
+# Assign TP, FN, FP and TN using conf
+TP <- conf[1, 1]
+FN <- conf[1, 2]
+FP <- conf[2, 1]
+TN <- conf[2, 2]
+
+# Calculate the accuracy: acc
+acc <- (TP + TN) / (TP + FN + FP + TN)
+acc
+
+# Calculate and print out the precision: prec
+prec <- TP / (TP + FP)
+prec
+
+# Calculate and print out the recall: rec
+rec <- TP / (TP + FN)
+rec
+```
+
+*** =sct
+```{r}
+
+msg_c <- function(which) {
+  paste("You defined <code>", which, "</code> incorrectly. If you're having trouble finding the right spot in the matrix, look at the exercise description.", sep="")
+}
+msg_m <- function(which) {
+  paste("You defined <code>", which, "</code> incorrectly. If you're having trouble finding the right formula, look at the exercise description.", sep="")
+}
+msg_p <- function(which) {
+  paste("You forgot to print <code>", which, "</code>. Use `print(", which, ")` or simply `", which, "` after you calculated it.", sep="")
+}
+test_object("TP", incorrect_msg = msg_c("TP"))
+test_object("FN", incorrect_msg = msg_c("FN"))
+test_object("FP", incorrect_msg = msg_c("FP"))
+test_object("TN", incorrect_msg = msg_c("TN"))
+test_object("acc", incorrect_msg = msg_m("acc"))
+test_output_contains("acc", incorrect_msg = msg_p("acc"))
+test_object("prec", incorrect_msg = msg_m("prec"))
+test_output_contains("prec", incorrect_msg = msg_p("prec"))
+test_object("rec", incorrect_msg = msg_m("rec"))
+test_output_contains("rec", incorrect_msg = msg_p("rec"))
+test_error()
+success_msg("Nice! With an accuracy of around 82%, the model only incorrectly predicted 18% of the passengers' fates. Overall you have an acceptable, but not truly satisfying classifier. In chapter 3, you'll improve your results!")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:f08ae54bec
+## The quality of a regression
+
+Imagine this: you're working at NASA and your team measured the sound pressure produced by an airplane's wing under different settings. These settings are the frequency of the wind, the angle of the wing, and several more. The results of this experiment are listed in the `air` dataset (Source: [UCIMLR](https://archive.ics.uci.edu/ml/datasets/Airfoil+Self-Noise)).
+
+Your team wants to build a model that's able to predict the sound pressure based on these settings, instead of having to do those tedious experiments every time. 
+
+A colleague has prepared a multivariable linear regression model, `fit`. It takes as input the predictors: wind frequency (`freq`), wing's angle (`angle`), and chord's length (`ch_length`). The response is the sound pressure (`dec`). All these variables can be found in `air`.
+
+Now, your job is to assess the quality of your colleague's model by calculating the RMSE:
+
+$$\mathrm{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}{(y\_i-\hat{y}\_i)^2}}$$
+
+For **example**: if `truth$col`was a column with true values of a variable and `pred` is the prediction of that variable, the formula could be calculated in _R_ as follows:
+
+```
+sqrt((1/nrow(truth)) * sum( (truth$col - pred) ^ 2))
+```
+
+*** =instructions
+- Take a look at the structure of `air`. What does it tell you?
+- Inspect your colleague's code that builds a multivariable linear regression model based on `air`. Not familiar with multiple linear regression? No problem! It will become clear in chapter 4. For now, you'll stick to assessing the model's performance.
+- Use the [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) function to make predictions for the observations in the `air` dataset. Simply pass `fit` to [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict); R will know what to do. Assign the result to `pred`.
+- Calculate the RMSE using the formula above. $y\_i$ corresponds to the actual sound pressure of observation $i$, which is in `air$dec`. $\hat{y}\_i$ corresponds to the predicted value of observation $i$, which is in `pred`. Assign the resulting RMSE to `rmse`.
+- Print out `rmse`.
+
+*** =hint
+- You can just use [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) with the fitted model as follows: `predict(fit)`. Assign the predictions to `pred`.
+- The formula for RMSE is in the instructions. The R statement shouldn't be too hard if you took the intermediate R class! You can use a combination of [`sqrt()`](http://www.rdocumentation.org/packages/base/functions/MathFun), [`sum()`](http://www.rdocumentation.org/packages/base/functions/sum) and [`nrow()`](http://www.rdocumentation.org/packages/base/functions/nrow), like in the example. For our problem, instead of `truth` and `truth$col` you should use `air` and `air$dec`. 
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+air <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/airfoil_self_noise.csv'))
+```
+
+*** =sample_code
+```{r}
+# The air dataset is already loaded into your workspace
+
+# Take a look at the structure of air
+str(air)
+
+# Inspect your colleague's code to build the model
+fit <- lm(dec ~ freq + angle + ch_length, data = air)
+
+# Use the model to predict for all values: pred
+
+
+# Use air$dec and pred to calculate the RMSE 
+
+
+# Print out rmse
+
+```
+
+*** =solution
+```{r}
+# The air dataset is already loaded into your workspace.
+
+# Take a look at the structure of air
+str(air)
+
+# Inspect your colleague's code to build the model
+fit <- lm(dec ~ freq + angle + ch_length, data = air)
+
+# Use the model to predict for all values: pred
+pred <- predict(fit)
+
+# Use air$dec and pred to calculate the RMSE 
+rmse <- sqrt((1/nrow(air)) * sum( (air$dec - pred) ^ 2))
+
+# Print out rmse
+rmse
+```
+
+*** =sct
+```{r}
+test_error()
+msg <- "Do not change or remove the definition of the regression model <code>fit</code>."
+str_msg <- "Did you call <code>str()</code> with argument <code>air</code>?"
+test_function("str", "object", not_called_msg = str_msg)
+
+test_object("fit", incorrect_msg = msg, undefined_msg = msg)
+test_correct ({
+  test_object("pred", incorrect_msg = "Your definition of <code>pred</code> is incorrect. You can use the <code>predict()</code> function with <code>fit</code> as the only input argument.")
+}, {
+  test_function("predict", "object", incorrect_msg = "When calling <code>predict</code>, use <code>fit</code> as only argument.")
+})
+test_object("rmse", incorrect_msg = "You defined <code>rmse</code> incorrectly. The example in the description can help you a lot. You can use the same code, but instead of `truth` and `truth$col` you should use `air` and `air$dec`. Watch out, the place of the parantheses is important!")
+test_output_contains("rmse", incorrect_msg = "Don't forget to print <code>rmse</code> to the console.")
+
+test_error()
+success_msg("Great! So the RMSE is given by 5 ... 5 what? Well 5 decibels, the unit of the sound pressure, your response variable. As a standalone number, it doesn't tell you a whole bunch. In order to derive its meaning, it should be compared to the RMSE of a different model for the same problem, which is exactly what you'll do in the next exercise!")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:25b185b248
+## Adding complexity to increase quality
+
+In the last exercise, your team's model had 3 predictors (input variables), but what if you included more predictors? You have the measurements on free-stream velocity, `velocity` and suction side displacement thickness, `thickness` available for use in the `air` dataset as well! 
+
+Adding the new variables will definitely increase the complexity of your model, but will it increase the performance? To find out, we'll take the RMSE from the new, more complex model and compare it to that of the original model.
+
+A colleague took your code from the previous exercise and added code that builds a new extended model, `fit2`! It's your job to once again assess the performance by calculating the RMSE.
+
+*** =instructions
+- Use the [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) function to make predictions using `fit2`, for all values in the `air` dataset. Assign the resulting vector to `pred2`.
+- Calculate the RMSE using the formula above. Assign this value to `rmse2`.
+- Print `rmse2` and compare it with the earlier `rmse`. What do you conclude?
+
+*** =hint
+- You can just use [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) with the fitted model, `fit2`, as the only argument! Be sure to assign these predictions to `pred`
+- The formula for RMSE is in the instructions. The R statement shouldn't be too hard if you took the intermediate R class! You can use a combination of [`sqrt()`](http://www.rdocumentation.org/packages/base/functions/MathFun), [`sum()`](http://www.rdocumentation.org/packages/base/functions/sum) and [`nrow()`](http://www.rdocumentation.org/packages/base/functions/nrow).
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+air <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/airfoil_self_noise.csv'))
+```
+
+*** =sample_code
+```{r}
+# The air dataset is already loaded into your workspace
+
+# Previous model
+fit <- lm(dec ~ freq + angle + ch_length, data = air)
+pred <- predict(fit)
+rmse <- sqrt(sum( (air$dec - pred) ^ 2) / nrow(air))
+rmse
+
+# Your colleague's more complex model
+fit2 <- lm(dec ~ freq + angle + ch_length + velocity + thickness, data = air)
+
+# Use the model to predict for all values: pred2
+
+
+# Calculate rmse2
+
+
+# Print out rmse2
+
+```
+
+*** =solution
+```{r}
+# The air dataset is already loaded into your workspace
+
+# Previous model
+fit <- lm(dec ~ freq + angle + ch_length, data = air)
+pred <- predict(fit)
+rmse <- sqrt(sum( (air$dec - pred) ^ 2) / nrow(air))
+rmse
+
+# Your colleague's more complex model
+fit2 <- lm(dec ~ freq + angle + ch_length + velocity + thickness, data = air)
+
+# Use the model to predict for all values: pred2
+pred2 <- predict(fit2)
+
+# Calculate rmse2
+rmse2 <- sqrt(sum( (air$dec - pred2) ^ 2) / nrow(air))
+
+# Print out rmse2
+rmse2
+```
+
+*** =sct
+```{r}
+msg <- "Do not change or remove the definition of the regresson model <code>fit</code>, <code>pred</code> and <code>rmse</code>."
+test_object("fit", incorrect_msg = msg, undefined_msg = msg)
+test_object("pred", incorrect_msg = msg, undefined_msg = msg)
+test_object("rmse", incorrect_msg = msg, undefined_msg = msg)
+test_output_contains("rmse", incorrect_msg = "Keep the line of code that prints <code>rmse</code>, so that you can use it for comparison later on.")
+msg <- "The code that builds the model <code>fit2</code> has already been given; do not change it."
+test_object("fit2", undefined_msg = msg, incorrect_msg = msg)
+
+test_correct ({
+  test_object("pred2", incorrect_msg = "Your definition of <code>pred2</code> is incorrect. You can use the <code>predict()</code> function with <code>fit</code> as only input.")
+}, {
+  test_function("predict", "object", incorrect_msg = "When calling <code>predict()</code>, use <code>fit2</code> as only argument.")
+})
+test_object("rmse2", incorrect_msg = "You defined <code>rmse2</code> incorrectly. You can take a look at the formula in the description for help.")
+test_output_contains("rmse2", incorrect_msg = "Don't forget to print <code>rmse2</code> to the console.")
+
+test_error()
+success_msg("Adding complexity seems to have caused the RMSE to decrease, from 5.216 to 4.799. But there's more going on here; perhaps adding more variables to a regression always leads to a decrease of your RMSE? You'll learn more about this in Chapter 4!")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:5a69631a88
+## Let's do some clustering!
+
+In the dataset `seeds` you can find various metrics such as `area`, `perimeter` and `compactness` for 210 seeds. (Source: [UCIMLR](https://archive.ics.uci.edu/ml/datasets/seeds)). However, the seeds' labels were lost. Hence, we don't know which metrics belong to which type of seed. What we do know, is that there were three types of seeds.
+
+The code on the right groups the seeds into three clusters (`km_seeds`), but is it likely that these three clusters represent our seed types? Let's find out.
+
+There are two initial steps you could take:
+
+1. Visualize the distribution of cluster assignments among two variables, for example `length` and `compactness`.
+2. Verify if the clusters are well separated and compact. To do this, you can calculate the between and within cluster sum of squares respectively.
+
+*** =instructions
+- Take a look at the structure of the `seeds` dataset.
+- Extend the [`plot()`](http://www.rdocumentation.org/packages/graphics/functions/plot.default.html) command by coloring the observations based on their cluster. Do this by setting the `col` argument equal to the `cluster` element of `km_seeds`.
+- Print out the *ratio* of the within sum of squares to the between cluster sum of squares, so $\mathrm{WSS}/\mathrm{BSS}$. These measures can be found in the cluster object `km_seeds` as `tot.withinss` and `betweenss`. Is the within sum of squares substantially lower than the between sum of squares?
+
+*** =hint
+If given a vector with length equal to the number of plotted observations, the `col` argument will color each observation based on the corresponding element in the given vector. In this case, the coloring vector `km_seeds$clusters` only contains 1's, 2's and 3's, which correspond to the colors "black", "red" and "green" respectively. Hence, the objects in cluster one will be colored black, while those in cluster two will be colored red.
+ 
+*** =pre_exercise_code
+```{r, eval=FALSE}
+seeds <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/seeds.csv'))
+seeds$seed <- NULL
+```
+
+*** =sample_code
+```{r}
+# The seeds dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Explore the structure of the dataset
+str(seeds)
+
+# Group the seeds in three clusters
+km_seeds <- kmeans(seeds, 3)
+
+# Color the points in the plot based on the clusters
+plot(length ~ compactness, data = seeds)
+
+# Print out the ratio of the WSS to the BSS
+
+```
+
+*** =solution
+```{r}
+# The seeds dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Explore the structure of the dataset
+str(seeds)
+
+# Group the seeds in three clusters
+km_seeds <- kmeans(seeds, 3)
+
+# Color the points in the plot based on the clusters
+plot(length ~ compactness, data = seeds, col = km_seeds$cluster)
+
+# Print out the ratio of the WSS to the BSS
+km_seeds$tot.withinss / km_seeds$betweenss
+```
+
+*** =sct
+```{r}
+
+msg0 <- "Do not mess with the random seed."
+msg2 <- "Do not change or remove the definition of the clustering <code>km_seeds</code>."
+str_msg <- "Did you call <code>str()</code> with argument <code>seeds</code>?"
+
+test_function("set.seed","seed", incorrect_msg = msg0, not_called_msg = msg0)
+test_function("str", "object", not_called_msg = str_msg)
+
+
+test_function("plot", "col", 
+              not_called_msg = "Don't remove the <code>plot()</code> code!",
+              incorrect_msg = "Did you color the points based on the corresponding clusters? Set the parameter <code>col</code> to <code>km_seeds$cluster</code> when calling <code>plot()</code>.")
+
+test_output_contains("km_seeds$tot.withinss / km_seeds$betweenss", incorrect_msg = "You didn't correctly print out the ratio of the WSS to the BSS. You can find these measures in <code>km_seeds</code>.")
+
+test_error()
+success_msg("Good work! The within sum of squares is far lower than the between sum of squares. Indicating the clusters are well seperated and overall compact. This is further strengthened by the plot you made, where the clusters you made were visually distinct for these two variables. It's likely that these three clusters represent the three seed types well, even if there's no way to truly verify this.")
+```
+
+*** =skills
+1,6
+
+
+--- type:PlainMultipleChoiceExercise xp:50 key:3265591a88
+## What to do with all these performance measures?
+
+By now, you should have a good understanding of the different techniques and their properties. Can you tell which one of the following statements is true?
+
+*** =instructions
+- Defining performance metrics for unsupervised learning (cf. clustering) is easy and straightforward.
+- You can use the RMSE to determine if a classification was good.
+- If you want to build a system that can automatically categorize email as spam or not, a confusion matrix can help you assess its quality.
+- The classification model you learned on a dataset shows an error rate of $0.1%$. You're sure this model will be useful.
+
+*** =hint
+Remember the exercises you made; when are the different techniques used? Can you remember a situation where a performance measure wasn't really helpful?
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+# no pec
+```
+
+*** =sct
+```{r}
+msg1 = "Oops! It's not so straightforward to design a performance measure for clustering that will help you choose the optimal amount of clusters. Remember the exercises and try again!"
+msg2 = "RMSE can only be calculated if your output variable has a numeric value. This is not the case for classification problems. Try again!"
+msg3 = "Great job! The confusion matrix will show you how many emails you correctly classified as spam, how many you incorrectly classified as not spam, and so on. It will help you select the best classification system."
+msg4 = "Incorrect! Error rate can be a great way to explore the performance of your model. However, always check other ratios like precision and recall as well. Remember the example from the video, where a model classified all patients as healthy when trying to label a very rare disease. This model would have a low error rate as well, but it wouldn't be useful at all."
+test_mc(correct = 3, feedback_msgs = c(msg1,msg2,msg3,msg4))
+```
+
+*** =skills
+6
+
+--- type:VideoExercise xp:50 key:2a627665a3
+## Training set and test set
+
+*** =video_link
+```{r,eval=FALSE}
+//player.vimeo.com/video/163669486
+```
+
+*** =video_stream
+```{r,eval=FALSE}
+https://player.vimeo.com/external/163669486.hd.mp4?s=69060964412b35348180c0b9ccd7e7d1770361ea&profile_id=119
+```
+
+*** =video_hls
+//videos.datacamp.com/transcoded/682_intro_to_ml/v1/hls-ch2_2.master.m3u8
+
+
+*** =skills
+6
+
+--- type:NormalExercise xp:100 key:e7ed1f86c5
+## Split the sets
+
+Let's return to the `titanic` dataset for which we set up a decision tree. In  exercises 2 and 3 you calculated a confusion matrix to assess the tree's performance. However, the tree was built using the entire set of observations. Therefore, the confusion matrix doesn't assess the predictive power of the `tree`. The training set and the test set were one and the same thing: this can be improved!
+
+First, you'll want to split the dataset into `train` and `test` sets. You'll notice that the `titanic` dataset is sorted on `titanic$Survived` , so you'll need to first shuffle the dataset in order to have a fair distribution of the output variable in each set. 
+
+For example, you could use the following commands to shuffle a data frame `df` and divide it into training and test sets with a 60/40 split between the two.
+
+```
+n <- nrow(df)
+shuffled_df <- df[sample(n), ]
+train_indices <- 1:round(0.6 * n)
+train <- shuffled_df[train_indices, ]
+test_indices <- (round(0.6 * n) + 1):n
+test <- shuffled_df[test_indices, ]
+```
+
+Watch out, this is an example of how to do a 60/40 split! In the exercise you have to do a 70/30 split. However, you can use the same commands, just change the numbers!
+
+*** =instructions
+- The first part of the exercise is done for you, we shuffled the observations of the `titanic` dataset and store the result in `shuffled`.
+- Split the dataset into a `train` set, and a `test` set. Use a 70/30 split. The train set should contain the rows in `1:round(0.7 * n)` and the test set in `(round(0.7 * n) + 1):n`. The example in the exercise description can help you!
+- Print out the structure of both `train` and `test` with [`str()`](http://www.rdocumentation.org/packages/utils/functions/str). Does your result make sense?
+
+*** =hint
+- For the shuffle, we used the permutated vector, `sample(n)` as an index of `titanic` to get the shuffled vector.
+- The train set should be `shuffled[1:round(0.7 * n),]`, where `n` is the total number of observations. The test set should contain the rows starting from 1 higher than the train set, up until the end of the dataset: `shuffled[(round(0.7 * n) + 1):n,]`.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+titanic <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/titanic.csv'))
+titanic <- titanic[order(titanic$Survived),]
+titanic$Survived <- factor(titanic$Survived, levels=c("1","0"))
+```
+
+*** =sample_code
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Shuffle the dataset, call the result shuffled
+n <- nrow(titanic)
+shuffled <- titanic[sample(n),]
+
+# Split the data in train and test
+
+
+
+# Print the structure of train and test
+
+```
+
+*** =solution
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Shuffle the dataset, call the result shuffled 
+n <- nrow(titanic)
+shuffled <- titanic[sample(n),]
+
+# Split the data in train and test
+train <- shuffled[1:round(0.7 * n),]
+test <- shuffled[(round(0.7 * n) + 1):n,]
+
+# Print the structure of train and test
+str(train)
+str(test)
+```
+
+*** =sct
+```{r}
+
+msg0 <- "Do not mess with the random seed."
+msg1 <- "Do not remove the definition of the tree model <code>tree</code>."
+test_function("set.seed","seed", incorrect_msg = msg0, not_called_msg = msg0)
+test_object("shuffled", incorrect_msg = "Your definition of <code>shuffled</code> is incorrect. Take another look at the instructions.")
+test_object("train", incorrect_msg = "Your definition of <code>train</code> is incorrect. Take another look at the instructions. Have you used the shuffled dataset?")
+test_object("test", incorrect_msg = "Your definition of <code>test</code> is incorrect. Take another look at the instructions. Have you used the shuffled dataset?")
+
+str_msg <- "Do not forget to print the structure of the <code>train</code> and <code>test</code> sets!"
+test_output_contains("str(train)", incorrect_msg = str_msg)
+test_output_contains("str(test)", incorrect_msg = str_msg)
+test_error()
+success_msg("Great! You've successfully split the entire dataset into a training set and a test set. Now you are ready to build a model on the training set, and to test its predictive ability on a test set.")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:cc04df9d08
+## First you train, then you test
+
+Time to redo the model training from before. The `titanic` data frame is again available in your workspace. This time, however, you'll want to build a decision tree on the training set, and next assess its predictive power on a set that has not been used for training: the test set.
+
+On the right, the code that splits `titanic` up in `train` and `test` has already been included. Also, the old code that builds a decision tree on the entire set is included. Up to you to correct it and connect the dots to get a good estimate of the model's predictive ability.
+
+*** =instructions
+- Fill in the `___` in the decision tree model, `rpart(...)` so that it is learned on the _training_ set.
+- Use the [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) function with the tree model as the first argument and the correct dataset as the second argument. Set `type` to `"class"`. Call the predicted vector `pred`. Remember that you should do the predictions on the _test_ set.
+- Use the [`table()`](http://www.rdocumentation.org/packages/base/functions/table) function to calculate the confusion matrix. Assign this table to `conf`. Construct the table with the test set's actual values (`test$Survived`) as the rows and the test set's model predicted values (`pred`) as columns.
+- Finally, print out `conf`.
+
+*** =hint
+- Make sure to use the `test` dataset as a second argument of [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict). You're assessing the performance on the test set, remember?
+- Use `test$Survived` and `pred` to build the confusion matrix, in this order.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+titanic <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/titanic.csv'))
+titanic <- titanic[order(titanic$Survived),]
+titanic$Survived <- factor(titanic$Survived, levels=c("1","0"))
+library(rpart)
+```
+
+*** =sample_code
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Shuffle the dataset; build train and test
+n <- nrow(titanic)
+shuffled <- titanic[sample(n),]
+train <- shuffled[1:round(0.7 * n),]
+test <- shuffled[(round(0.7 * n) + 1):n,]
+
+# Fill in the model that has been learned.
+tree <- rpart(Survived ~ ., ___, method = "class")
+
+# Predict the outcome on the test set with tree: pred
+
+
+# Calculate the confusion matrix: conf
+
+
+# Print this confusion matrix
+
+```
+
+*** =solution
+```{r}
+# The titanic dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Shuffle the dataset; build train and test
+n <- nrow(titanic)
+shuffled <- titanic[sample(n),]
+train <- shuffled[1:round(0.7 * n),]
+test <- shuffled[(round(0.7 * n) + 1):n,]
+
+# Fill in the model that has been learned.
+tree <- rpart(Survived ~ ., train, method = "class")
+
+# Predict the outcome on the test set with tree: pred
+pred <- predict(tree, test, type = "class")
+
+# Calculate the confusion matrix: conf
+conf <- table(test$Survived, pred)
+
+# Print this confusion matrix
+print(conf)
+```
+
+*** =sct
+```{r}
+
+msg0 <- "Do not mess with the random seed."
+test_function("set.seed","seed", incorrect_msg = msg0, not_called_msg = msg0)
+
+msg2 <- "Do not change anything about the code that defines <code>shuffled</code>, <code>n</code>, <code>train</code> and <code>test</code>."
+test_object("shuffled", undefined_msg = msg2, incorrect_msg = msg2)
+test_object("n", undefined_msg = msg2, incorrect_msg = msg2)
+test_object("train", undefined_msg = msg2, incorrect_msg = msg2)
+test_object("test", undefined_msg = msg2, incorrect_msg = msg2)
+
+msg1 <- "Do not remove the definition of the tree model <code>tree</code>."
+test_object("tree", incorrect_msg = "Be sure to edit the <code>rpart()</code> statement correctly. Remember you should train the model using the `train` set.", undefined_msg = msg1)
+
+test_correct ({
+  test_object("pred", incorrect_msg = "Your definition of <code>pred</code> is incorrect. You can use the <code>predict()</code> function with <code>tree</code> and <code>test</code> as the first two inputs. Don't forget to add <code>type = \"class\"</code>.")
+}, {
+  test_function("predict", "object", incorrect_msg = "When calling <code>predict()</code>, use <code>tree</code> as first argument and <code>test</code> as second. Don't forget to add <code>type = \"class\"</code>.")
+})
+
+test_object("conf", 
+            incorrect_msg = "Make sure that <code>conf</code> contains the correct confusion matrix. You should use the <code>table()</code> function with two arguments. The true labels of the test set come first!")
+
+test_output_contains("print(conf)", incorrect_msg = "Make sure to print out the confusion matrix.")
+
+test_error()
+success_msg("Phew, that was a lot to take in. The confusion matrix reveals an accuracy of (58+102)/(58+31+23+102) = 74.76%. This is less than the 81.65% you calculated in the first section of this chapter. However, this is a much more trustworthy estimate of the model's true predictive power.")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:d44bc0c41a
+## Using Cross Validation
+
+You already did a great job in assessing the predictive performance, but let's take it a step further: _cross validation_.
+
+In this exercise, you will fold the dataset 6 times and calculate the accuracy for each fold. The mean of these accuracies forms a more robust estimation of the model's true accuracy of predicting unseen data, because it is less dependent on the choice of training and test sets. 
+
+**Note:** Other performance measures, such as recall or precision, could also be used here.
+
+*** =instructions
+- The code to split the dataset correctly 6 times and build a model each time on the training set is already written for you inside the for loop; try to understand the code. `accs` is intialized for you as well.
+- Use the model to predict the values of the test set. Use [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) with three arguments: the decision tree (`tree`), the test set (`test`) and don't forget to set `type` to `"class"`. Assign the result to `pred`.
+- Make the confusion matrix using [`table()`](http://www.rdocumentation.org/packages/base/functions/table) and assign it to `conf`. `test$Survived` should be on the rows, `pred` on the columns.
+- Fill in the `___` in the statement to define `accs[i]`. The result should be the accuracy: the sum of the diagonal of the confusion matrix divided by the total sum of the confusion matrix.
+- Finally, print the mean accuracy of the 6 iterations.
+
+*** =hint
+- Make sure to use [`predict()`](http://www.rdocumentation.org/packages/rpart/functions/predict) with the `tree` model as a first argument and the `test` set as a second. Don't forget the `type` argument; it should be set to `"class"`!
+- The confusion matrix should have the true values, `test$Survived` in its rows and the predicted values, `pred` in its columns. So you should use `table(test$Survived, pred)`.
+- For the accuracy, you can use `sum(diag(conf))` and `sum(conf)`.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+titanic <- read.csv(url("http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/titanic.csv"))
+titanic$Survived <- factor(titanic$Survived, levels=c("1", "0"))
+library(rpart)
+set.seed(1)
+shuffled <- titanic[sample(nrow(titanic)),]
+```
+
+*** =sample_code
+```{r}
+# The shuffled dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Initialize the accs vector
+accs <- rep(0,6)
+
+for (i in 1:6) {
+  # These indices indicate the interval of the test set
+  indices <- (((i-1) * round((1/6)*nrow(shuffled))) + 1):((i*round((1/6) * nrow(shuffled))))
+  
+  # Exclude them from the train set
+  train <- shuffled[-indices,]
+  
+  # Include them in the test set
+  test <- shuffled[indices,]
+  
+  # A model is learned using each training set
+  tree <- rpart(Survived ~ ., train, method = "class")
+  
+  # Make a prediction on the test set using tree
+
+  
+  # Assign the confusion matrix to conf
+
+  
+  # Assign the accuracy of this model to the ith index in accs
+  accs[i] <- sum(diag(___))/sum(conf)
+}
+
+# Print out the mean of accs
+
+```
+
+*** =solution
+```{r}
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# The shuffled dataset is already loaded into your workspace
+
+# Initialize the accs vector
+accs <- rep(0,6)
+
+for (i in 1:6) {
+  # These indices indicate the interval of the test set
+  indices <- (((i-1) * round((1/6)*nrow(shuffled))) + 1):((i*round((1/6) * nrow(shuffled))))
+  
+  # Exclude them from the train set
+  train <- shuffled[-indices,]
+  
+  # Include them in the test set
+  test <- shuffled[indices,]
+  
+  # A model is learned using each training set
+  tree <- rpart(Survived ~ ., train, method = "class")
+  
+  # Make a prediction on the test set using tree
+  pred <- predict(tree, test, type = "class")
+  
+  # Assign the confusion matrix to conf
+  conf <- table(test$Survived, pred)
+  
+  # Assign the accuracy of this model to the ith index in accs
+  accs[i] <- sum(diag(conf))/sum(conf)
+}
+
+# Print out the mean of accs
+mean(accs)
+```
+
+*** =sct
+```{r}
+
+msg <- "Do not mess with the random seed."
+msg0 <- "Do not change or remove the condition of the for loop."
+msg1 <- "Do not change or remove the definition of <code>indices</code>."
+msg2 <- "Do not change or remove the definition of <code>train</code>."
+msg3 <- "Do not change or remove the definition of <code>test</code>."
+msg4 <- "Do not change or remove the definition of the tree model <code>tree</code>."
+
+test_function("set.seed", "seed", incorrect_msg = msg, not_called_msg = msg)
+
+test_for_loop(index = 1, 
+              cond_test = {
+                test_student_typed("i in 1:6", not_typed_msg = msg0)
+              },
+              expr_test = {
+                msg = "In the `predict()` call inside the `for` loop, make sure pass the correct arguments. The %s argument seems to be incorrect."
+                
+                test_function("predict", "object", eval = F, incorrect_msg = sprintf(msg, "first"))
+                test_function("predict", "newdata", eval = F, incorrect_msg = sprintf(msg, "second"))
+                test_function("predict", "type", eval = F, incorrect_msg = sprintf(msg, "third"))
+                # Ugly regexes, table can not be used well with test_function() because of the dots: ...
+                test_student_typed("table\\s*\\(\\s*(test\\s*\\$\\s*Survived)|(test\\s*\\[\\[\\s*(\"|')Survived(\"|')\\s*\\]\\])|(test\\s*\\[\\s*(\"|')Survived(\"|')\\s*\\])\\s*,\\s*pred\\s*\\)", fixed = F,
+                                   not_typed_msg = "In the `for` loop, did you use `table()` with `test$Survived` as a first argument and `pred` as a second to define `conf`?")
+               test_student_typed("sum\\s*\\(\\s*diag\\s*\\(\\s*conf", fixed = F,
+                                  not_typed_msg = "In the `for` loop's definition of `accs[i]`, you should fill in `conf` on the `___`.")
+              })
+
+test_object("accs", incorrect_msg = "Your definition of <code>accs</code> is incorrect. You can use <code>rep()</code> to initialize. Be sure to add the correct value to the correct index in the for loop. To calculate the accuracies you can use <code>diag()</code> and <code>sum</code>.")
+
+test_output_contains("print(mean(accs))", incorrect_msg = "Make sure to print out the mean of the accuracies.")
+
+test_object("indices", incorrect_msg = msg1, undefined_msg = msg1)
+test_object("train", incorrect_msg = msg2, undefined_msg = msg2)
+test_object("test", incorrect_msg = msg3, undefined_msg = msg3)
+test_object("tree", incorrect_msg = msg4, undefined_msg = msg4)
+
+test_error()
+success_msg("Blimey, that was a hard one. You just programmed a cross validation algorithm, not bad! This estimate will be a more robust measure of your accuracy. It will be less susceptible to the randomness of splitting the dataset.")
+```
+
+*** =skills
+1,6
+
+--- type:MultipleChoiceExercise xp:50 key:e4084093ca
+## How many folds?
+
+Let's say you're doing cross validation on a dataset with 22680 observations. This number is stored as `n` in your workspace. You want the training set to contain 21420 entries, saved as `tr`. How many folds can you use for your cross validation? In other words, how many iterations with other test sets can you do on the dataset?
+
+Remember you can use the console to the right as a calculator. 
+
+*** =instructions
+- 1.058824
+- 16
+- 2.523238
+- 18
+
+*** =hint
+For cross validation you shift your test set one place further each iteration. So you should calculate how many times your test set fits in your dataset.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+n <- 22680
+tr <- 21420
+```
+
+*** =sct
+```{r}
+msg1 <- "Almost! The question is not how many times your training fits in your complete dataset. The question is how many times your test set fits in your dataset!"
+msg2 <- "Oops! You chose the wrong answer."
+msg3 <- "Oops! You chose the wrong answer."
+msg4 <- "Correct! The test set fits in the complete dataset exactly 18 times."
+test_mc(correct=4, feedback_msgs = c(msg1, msg2, msg3, msg4))
+```
+
+*** =skills
+1,6
+
+--- type:VideoExercise xp:50 key:8bd35cbf98
+## Bias and Variance
+
+*** =video_link
+```{r,eval=FALSE}
+//player.vimeo.com/video/163669488
+```
+
+*** =video_stream
+```{r,eval=FALSE}
+https://player.vimeo.com/external/163669488.hd.mp4?s=cdbec1f3431a8c974c6d991571a03d6d7063ab28&profile_id=119
+```
+
+*** =video_hls
+//videos.datacamp.com/transcoded/682_intro_to_ml/v1/hls-ch2_3.master.m3u8
+
+
+*** =skills
+6
+
+--- type:NormalExercise xp:100 key:3b549ec4a2
+## Overfitting the spam!
+
+Do you remember the crude spam filter, `spam_classifier()`, from chapter 1?  It filters spam based on the average sequential use of capital letters (`avg_capital_seq`) to decide whether an email was spam (1) or not (0).
+
+You may recall that we cheated and it perfectly filtered the spam. However, the set (`emails_small`) you used to test your classifier was only a small fraction of the entire dataset `emails_full` (Source: [UCIMLR](https://archive.ics.uci.edu/ml/datasets/Spambase)). 
+
+Your job is to verify whether the `spam_classifier()` that was built for you generalizes to the entire set of emails. The accuracy for the set `emails_small` was equal to 1. Is the accuracy for the entire set `emails_full` substantially lower?
+
+*** =instructions
+- Apply `spam_classifier()` on the `avg_capital_seq` variable in `emails_full` and save the results in `pred_full`.
+- Create a confusion matrix, using `table()`: `conf_full`. Put the true labels found in `emails_full$spam` in the rows.
+- Use `conf_full` to calculate the accuracy: `acc_full`. The functions [`diag()`](http://www.rdocumentation.org/packages/base/functions/diag) and [`sum()`](http://www.rdocumentation.org/packages/base/functions/sum) will help. Print out the result. 
+
+*** =hint
+- The confusion matrix is given by
+
+$$\left(
+\begin{matrix}
+           & \mathbf{P} & \mathbf{N}\\\
+\mathbf{p} & \mathrm{TP}& \mathrm{FN}\\\
+\mathbf{n} & \mathrm{FP}& \mathrm{TN}\\\
+\end{matrix}
+\right)$$
+
+- The accuracy is given by
+
+$$\mathrm{Accuracy} = \frac{\mathrm{TP}+\mathrm{TN}}{\mathrm{TP}+\mathrm{FN}+\mathrm{FP}+\mathrm{TN}},$$
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+emails_full <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_full.csv'))
+emails_small <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_small.csv'))
+emails_small$spam <- factor(emails_small$spam, levels = c("1","0"))
+emails_full$spam <- factor(emails_full$spam, levels = c("1","0"))
+```
+
+*** =sample_code
+```{r}
+# The spam filter that has been 'learned' for you
+spam_classifier <- function(x){
+  prediction <- rep(NA, length(x)) # initialize prediction vector
+  prediction[x > 4] <- 1 
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(factor(prediction, levels = c("1", "0"))) # prediction is either 0 or 1
+}
+
+# Apply spam_classifier to emails_full: pred_full
+
+
+# Build confusion matrix for emails_full: conf_full
+
+
+# Calculate the accuracy with conf_full: acc_full
+
+
+# Print acc_full
+```
+
+*** =solution
+```{r}
+# The spam filter that has been 'learned' for you
+spam_classifier <- function(x){
+  prediction <- rep(NA, length(x)) # initialize prediction vector
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(factor(prediction, levels = c("1", "0"))) # prediction is either 0 or 1
+}
+
+# Apply spam_classifier to emails_full: pred_full
+pred_full <- spam_classifier(emails_full$avg_capital_seq)
+
+# Build confusion matrix for classifier on emails_full: conf_full
+conf_full <- table(emails_full$spam, pred_full)
+
+# Calculate the accuracy with conf_full: acc_full
+acc_full <- sum(diag(conf_full)) / sum(conf_full)
+
+# Print out acc_full
+acc_full
+```
+
+*** =sct
+```{r}
+msg1 <- "Do not change or remove the definition of the <code>spam_classifier</code>."
+
+test_object("spam_classifier", incorrect_msg = msg1, undefined_msg = msg1)
+
+
+test_object("pred_full", incorrect_msg = "You didn't correctly apply <code>spam_classifier</code> to <code>emails_full$avg_capital_seq</code>")
+            
+test_object("conf_full", incorrect_msg = "Make sure that <code>conf_full</code> contains the correct confusion matrix. You should use the <code>table()</code> function with <code>emails_full$spam</code> listed first.")
+
+test_object("acc_full", incorrect_msg = "Your definition of <code>acc_full</code> is incorrect. To calculate the accuracy you can use <code>diag()</code> and <code>sum()</code>.")
+
+test_error()
+
+success_msg("Good job! This hard-coded classifier gave you an accuracy of around 65% on the full dataset, which is way worse than the 100% you had on the small dataset back in chapter 1. Hence, the classifier does not generalize well at all!")
+```
+
+*** =skills
+1,6
+
+--- type:NormalExercise xp:100 key:1afbbd1463
+## Increasing the bias
+
+It's official now, the `spam_classifier()` from chapter 1 is bogus. It simply _overfits_ on the `emails_small` set and, as a result, doesn't generalize to larger datasets such as `emails_full`.
+
+So let's try something else. On average, emails with a high frequency of sequential capital letters are spam. What if you simply filtered spam based on one threshold for `avg_capital_seq`?
+
+For example, you could filter all emails with `avg_capital_seq > 4` as spam. By doing this, you increase the interpretability of the classifier and restrict its complexity. However, this increases the bias, i.e. the error due to restricting your model.
+
+Your job is to simplify the rules of `spam_classifier` and calculate the accuracy for the full set `emails_full`. Next, compare it to that of the small set `emails_small`, which is coded for you. Does the model generalize now?
+
+*** =instructions
+- Simplify the rules of the `spam_classifier`. Emails with an `avg_capital_seq` strictly longer than `4` are spam (labeled with `1`), all others are seen as no spam (`0`).
+- Inspect the code that defines `conf_small` and `acc_small`.
+- Set up the confusion matrix for the `emails_full` dataset. Put the true labels found in `emails_full$spam` in the rows and the predicted spam values in the columns. Assign to `conf_full`.
+- Use `conf_full` to calculate the accuracy. Assign this value to `acc_full` and print it out. Before, `acc_small` and `acc_full` were 100% and 65%, respectively; what do you conclude?
+
+*** =hint
+- You should edit the rules of `spam_classifier()` to contain two rules. When `x` is bigger then `4` the label should be `1` (`prediction[x > 4] <- 1`) Otherwise, it should be `0` (`prediction[x >= 4] <- 0`).
+- Remember to use [`table()`](http://www.rdocumentation.org/packages/base/functions/table) to create the confusion matrix. The real values should be in the rows, the predicted values using `spam_classifier()` in the columns.
+- The accuracy can be calculated using the confusion matrix. The functions [`diag()`](http://www.rdocumentation.org/packages/base/functions/diag) and [`sum()`](http://www.rdocumentation.org/packages/base/functions/sum) might help.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+emails_full <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_full.csv'))
+emails_small <- read.csv(url('http://s3.amazonaws.com/assets.datacamp.com/course/intro_to_ml/emails_small.csv'))
+emails_small$spam <- factor(emails_small$spam, levels = c("1","0"))
+emails_full$spam <- factor(emails_full$spam, levels = c("1","0"))
+```
+
+*** =sample_code
+```{r}
+# The all-knowing classifier that has been learned for you
+# You should change the code of the classifier, simplifying it
+spam_classifier <- function(x){
+  prediction <- rep(NA, length(x))
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(factor(prediction, levels = c("1", "0")))
+}
+
+# conf_small and acc_small have been calculated for you
+conf_small <- table(emails_small$spam, spam_classifier(emails_small$avg_capital_seq))
+acc_small <- sum(diag(conf_small)) / sum(conf_small)
+acc_small
+
+# Apply spam_classifier to emails_full and calculate the confusion matrix: conf_full
+
+
+# Calculate acc_full
+
+
+# Print acc_full
+
+
+```
+
+*** =solution
+```{r}
+# The all-knowing classifier that has been learned for you
+# You should change the code of the classifier, simplifying it
+spam_classifier <- function(x){
+  prediction <- rep(NA, length(x))
+  prediction[x > 4] <- 1
+  prediction[x <= 4] <- 0
+  return(factor(prediction, levels = c("1","0")))
+}
+
+# conf_small and acc_small have been calculated for you
+conf_small <- table(emails_small$spam, spam_classifier(emails_small$avg_capital_seq))
+acc_small <- sum(diag(conf_small)) / sum(conf_small)
+acc_small
+
+# Apply spam_classifier to emails_full and calculate the confusion matrix: conf_full
+conf_full <- table(emails_full$spam, spam_classifier(emails_full$avg_capital_seq))
+
+# Calculate acc_full
+acc_full <- sum(diag(conf_full)) / sum(conf_full)
+
+# Print acc_full
+acc_full
+```
+
+*** =sct
+```{r}
+msg1 <- "Do not remove the definition of the <code>spam_classifier</code>."
+
+test_function_definition(name = "spam_classifier",
+                         function_test = {
+                           msg <- "Have another look at the definition of the <code>spam_classifier()</code> function. You only want to keep four lines: the initialization of <code>prediction</code>, a line with <code>prediction[x > 4] <- ... </code>, a line with <code>prediction[x <= 4] <- ...</code> and finally the return statement."
+                           test_expression_result("spam_classifier(1)", incorrect_msg = msg)
+                           test_expression_result("spam_classifier(2.5)", incorrect_msg = msg)
+                           test_expression_result("spam_classifier(4)", incorrect_msg = msg)
+                           test_expression_result("spam_classifier(5)", incorrect_msg = msg)
+                         })
+
+msg1 <- "Do not alter the definition of <code>conf_small</code> or <code>acc_small</code>, it's coded for you."
+
+test_object("conf_small", incorrect_msg = msg1, undefined_msg = msg1)
+test_object("acc_small", incorrect_msg = msg1, undefined_msg = msg1)
+            
+test_object("conf_full", incorrect_msg = "Make sure that <code>conf_full</code> contains the correct confusion matrix. You should use the <code>table()</code> function with two arguments.")
+test_object("acc_full", incorrect_msg = "Your definition of <code>acc_full</code> is incorrect. To calculate the accuracy you can use <code>diag()</code> and <code>sum</code>.")
+
+success_msg("Great! Your model no longer fits the small dataset perfectly but it fits the big dataset better. You increased the bias on the model and caused it to generalize better over the complete dataset. While the first classifier overfits the data, an accuracy of 73% is far from satisfying for a spam filter. Maybe you can provide us with a better model in a later exercise!")
+```
+
+*** =skills
+1,6
+
+--- type:PlainMultipleChoiceExercise xp:50 key:7415a5e398
+## Interpretability
+
+Which of the following models do you think would have the highest interpretability? Remember that a high interpretability usually implies a high bias.
+
+It can help to try to describe what the model has to do to classify instances. Usually if you are able to describe what all aspects of a model do and what they mean, the model is quite interpretable.
+
+*** =instructions
+- We've made a regression which fits perfectly through all 15 points in the training set. We used a high-degree polynomial.
+- A model predicts whether a person with certain attributes is male or female. It uses one threshold on the height attribute to make its prediction.
+- A spam filter uses various rules on 10 attributes to classify whether an email is spam or not. It uses attributes such as specific word count, character count, and so on.
+- We made a prediction model for car insurance claims. It uses a few attributes and relations between these attributes to predict the amount of claims one will make. 
+
+*** =hint
+Try to find the simplest model. Do you think you could explain the behavior of the polynomial? Using a lot of attributes in classification will make the classification less general, and thus harder to describe.
+
+*** =pre_exercise_code
+```{r, eval=FALSE}
+# no pec
+```
+
+*** =sct
+```{r}
+msg1 <- "Oops! That answer is not correct. Do you think you could explain why the polynomial behaves like it does? Wouldn't it be easier if you just had to explain the slope in a linear model, for example."
+msg2 <- "Correct! This is a very simple and general classification. Note that this would not neccesarily be a good model."
+msg3 <- "Incorrect! Allowing a learning algorithm to use a lot of attributes will decrease the bias on the model. This will generally increase the complexity."
+msg4 <- "Almost. Using few attributes will reduce the complexity, but adding relationships between these attributes will increase the complexity. There is a simpler model in the list, try to find it!"
+test_mc(correct=2, feedback_msgs = c(msg1, msg2, msg3, msg4))
+```
+
+*** =skills
+6
