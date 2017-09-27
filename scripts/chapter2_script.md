@@ -1,4 +1,4 @@
----
+--- video_exercise_key:8da6f042a7
 
 ## Measuring model performance or error
 
@@ -46,7 +46,7 @@ A popular performance index to compare clustering algorithms is the Dunn index. 
 
 There are tons of performance measures out there, and these were just a few of them. The most important thing is to think critically about the models you're training and also to interpret the performance measures correctly. This is something you'll get good at with experience. For now, let's practice what you learned in the exercises.
 
----
+--- video_exercise_key:2a627665a3
 
 ## Training set and test test
 
@@ -72,7 +72,7 @@ An n-fold cross-validation means the dataset is folded n times with the test set
 
 Now that you've learned about the training and test set, let's see how you do on the exercises!
 
----
+--- video_exercise_key:8bd35cbf98
 
 ## Bias and Variance
 

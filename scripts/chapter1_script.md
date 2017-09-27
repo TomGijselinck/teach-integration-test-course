@@ -1,4 +1,4 @@
----
+--- video_exercise_key:bcc46f3ba5
 
 ## Machine Learning: What's the challenge?
 
@@ -27,7 +27,7 @@ There are so many other examples to machine learning, such as shopping basket an
 
 In the next set of exercises, you'll consolidate the main ideas about machine learning and take your first gentle steps in this exciting field!
 
----
+--- video_exercise_key:fd29eec2d2
 
 ## Classification, Regression and Clustering Problems
 
@@ -67,7 +67,7 @@ An intuitively straightforward clustering method is k-means. This method will cl
 
 Enough theory for a while, it's time to roll up your sleeves, head over to the exercises and tackle some classification, regression and clustering problems!
 
----
+--- video_exercise_key:0ff4bc2a0e
 
 ## Supervised vs. Unsupervised
 
